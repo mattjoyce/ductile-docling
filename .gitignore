@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# Docling local model caches when run outside the container
+hf-cache/
+.cache/
+
+# Local convenience
+data/
+state/
+*.db
+*.pid
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# Beads (kept per-repo, but local hooks vary)
+.beads/dolt-server.pid
+.beads/dolt-server.log
+.beads/dolt-config.log

@@ -1,0 +1,50 @@
+# Reference: ductile-docling as a sidecar inside the gateway compose.
+#
+# This file is illustrative — the real deployment lives in your gateway's
+# docker-compose.yml (e.g. /mnt/user/appdata/ductile/docker-compose.yml on
+# unraid). Drop the `docling` service into that compose alongside `ductile`,
+# share the workspace volume between them at the same path, and the gateway
+# reaches the worker as `http://docling:8080/convert` over the internal
+# compose network (no LAN port needed).
+
+services:
+  ductile:
+    # … your gateway service definition lives here; the relevant additions are:
+    volumes:
+      - /mnt/user/Projects/ductile_workspace:/workspace
+    depends_on:
+      docling:
+        condition: service_healthy
+
+  docling:
+    build: ../ductile-docling      # adjust to wherever you clone this repo
+    image: ductile-docling:latest
+    container_name: ductile-docling
+    restart: unless-stopped
+    # Internal-only — no `ports:` block. The gateway reaches us by service
+    # name DNS on the default compose network: http://docling:8080
+    volumes:
+      - /mnt/user/Projects/ductile_workspace:/workspace
+      - docling-models:/models                              # persistent HF cache
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+          cpus: "2.0"
+        reservations:
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  docling-models:
+
